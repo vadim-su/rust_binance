@@ -1,78 +1,29 @@
 use reqwest::Client;
 use url::Url;
 
-use crate::{
-    errors::BinanceError,
-    types::general::{
-        AveragePrice, CompressedTrade, ExchangeInfo, Kline, KlineInterval, OrderBook, Timestamp,
-        Trade,
-    },
+use crate::errors::BinanceError;
+use crate::types::market::{
+    AveragePrice, CompressedTrade, Kline, KlineInterval, OrderBook, Ticker24, Ticker24Mini,
+    TickerTradingDay, TickerTradingDayMini, Trade,
 };
 
-const API_VERSION: &str = "v3";
+use super::get_base_url;
 
-pub struct BinanceClient {
+pub struct BinanceMarketClient {
     client: Client,
     api_key: String,
     secret: String,
     base_url: Url,
 }
 
-impl BinanceClient {
-    pub fn new(api_key: String, secret: String, testnet: bool) -> Self {
-        let base_url = if testnet {
-            format!("https://testnet.binance.vision/api/{API_VERSION}/")
-                .parse()
-                .unwrap()
-        } else {
-            format!("https://api.binance.com/api/{API_VERSION}/")
-                .parse()
-                .unwrap()
-        };
-
+impl BinanceMarketClient {
+    pub fn new(client: Client, api_key: String, secret: String, testnet: bool) -> Self {
         return Self {
-            client: Client::new(),
+            client,
             api_key,
             secret,
-            base_url,
+            base_url: get_base_url(testnet),
         };
-    }
-
-    pub async fn ping(&self) -> Result<(), BinanceError> {
-        let url = self.base_url.join("ping")?;
-        self.client.get(url).send().await?.error_for_status()?;
-        Ok(())
-    }
-
-    pub async fn get_time(&self) -> Result<Timestamp, BinanceError> {
-        let url = self.base_url.join("time")?;
-        let resp = self
-            .client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<Timestamp>()
-            .await?;
-        return Ok(resp);
-    }
-
-    pub async fn get_exchange_info(&self, symbols: &[&str]) -> Result<ExchangeInfo, BinanceError> {
-        let url = self.base_url.join("exchangeInfo")?;
-
-        // ["BTCUSDT", "ETHUSDT"]
-        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
-
-        let resp = self
-            .client
-            .get(url)
-            .query(&[("symbols", symbols_query)])
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<ExchangeInfo>()
-            .await?;
-        return Ok(resp);
     }
 
     pub async fn get_depth(
@@ -285,6 +236,91 @@ impl BinanceClient {
 
         return Ok(resp);
     }
+
+    pub async fn get_ticker_24hr(&self, symbols: &[&str]) -> Result<Vec<Ticker24>, BinanceError> {
+        let url = self.base_url.join("ticker/24hr")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![("symbols", symbols_query)];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<Ticker24>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_ticker_24hr_mini(
+        &self,
+        symbols: &[&str],
+    ) -> Result<Vec<Ticker24Mini>, BinanceError> {
+        let url = self.base_url.join("ticker/24hr")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![("symbols", symbols_query), ("type", "MINI".to_string())];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<Ticker24Mini>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_ticker_trading_day(
+        &self,
+        symbols: &[&str],
+    ) -> Result<Vec<TickerTradingDay>, BinanceError> {
+        let url = self.base_url.join("ticker/tradingDay")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![("symbols", symbols_query)];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<TickerTradingDay>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_ticker_trading_day_mini(
+        &self,
+        symbols: &[&str],
+    ) -> Result<Vec<TickerTradingDayMini>, BinanceError> {
+        let url = self.base_url.join("ticker/tradingDay")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![("symbols", symbols_query), ("type", "MINI".to_string())];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<TickerTradingDayMini>>()
+            .await?;
+
+        return Ok(resp);
+    }
 }
 
 #[cfg(test)]
@@ -298,44 +334,34 @@ mod tests {
         let api_key = "test_api_key";
         let secret = "test_secret";
 
-        let client = BinanceClient::new(api_key.to_string(), secret.to_string(), true);
+        let client =
+            BinanceMarketClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
         assert_eq!(client.api_key, api_key);
         assert_eq!(client.secret, secret);
-        assert!(client.base_url.to_string().starts_with("https://testnet"));
-
-        let client = BinanceClient::new(api_key.to_string(), secret.to_string(), false);
-        assert!(
-            client
-                .base_url
-                .to_string()
-                .starts_with("https://api.binance.com")
+        assert_eq!(
+            client.base_url.as_str(),
+            "https://testnet.binance.vision/api/v3/"
         );
-    }
 
-    #[tokio::test]
-    async fn test_ping() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
-        let result = client.ping().await;
-        result.unwrap();
-    }
-
-    #[tokio::test]
-    async fn test_get_time() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
-        let result = client.get_time().await;
-        assert!(result.unwrap().server_time > 0);
-    }
-
-    #[tokio::test]
-    async fn test_get_exchange_info() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
-        let result = client.get_exchange_info(&["BTCUSDT", "ETHUSDT"]).await;
-        assert!(!result.unwrap().symbols.is_empty());
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            api_key.to_string(),
+            secret.to_string(),
+            false,
+        );
+        assert_eq!(client.api_key, api_key);
+        assert_eq!(client.secret, secret);
+        assert_eq!(client.base_url.as_str(), "https://api.binance.com/api/v3/");
     }
 
     #[tokio::test]
     async fn test_get_depth() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client.get_depth("BTCUSDT", Some(5)).await;
         let depth = result.unwrap();
         assert!(!depth.bids.is_empty());
@@ -349,7 +375,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_recent_trades() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client.get_recent_trades("BTCUSDT", Some(5)).await;
         let trades = result.unwrap();
         assert!(!trades.is_empty());
@@ -358,7 +389,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_historical_trades() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client.get_historical_trades("BTCUSDT", Some(5), None).await;
         let trades = result.unwrap();
         assert!(!trades.is_empty());
@@ -367,7 +403,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_historical_trades_with_from_id() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client
             .get_historical_trades("BTCUSDT", Some(5), Some(1))
             .await;
@@ -378,7 +419,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_compressed_trades() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client
             .get_compressed_trades("BTCUSDT", Some(5), None, None, None)
             .await;
@@ -389,7 +435,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_klines() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client
             .get_klines("BTCUSDT", KlineInterval::OneDay, Some(5), None, None, None)
             .await;
@@ -400,7 +451,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ui_klines() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client
             .get_ui_klines("BTCUSDT", KlineInterval::OneDay, Some(5), None, None, None)
             .await;
@@ -410,11 +466,67 @@ mod tests {
     }
 
     #[tokio::test]
-
     async fn test_get_average_price() {
-        let client = BinanceClient::new("test key".to_string(), "test secret".to_string(), true);
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
         let result = client.get_average_price("BTCUSDT").await;
         let average_price = result.unwrap();
         assert!(average_price.price > Decimal::from_str_exact("0.0").unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_ticker_24hr() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+        let result = client.get_ticker_24hr(&["BTCUSDT"]).await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_ticker_24hr_mini() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+        let result = client.get_ticker_24hr_mini(&["BTCUSDT"]).await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_ticker_trading_day() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+        let result = client.get_ticker_trading_day(&["BTCUSDT"]).await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_ticker_trading_day_mini() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+        let result = client.get_ticker_trading_day_mini(&["BTCUSDT"]).await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
     }
 }
