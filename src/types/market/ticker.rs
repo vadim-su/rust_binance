@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
@@ -46,7 +48,7 @@ pub struct Ticker24Mini {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TickerTradingDay {
+pub struct Ticker {
     pub symbol: String,
     pub price_change: Decimal,
     pub price_change_percent: Decimal,
@@ -66,7 +68,7 @@ pub struct TickerTradingDay {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TickerTradingDayMini {
+pub struct TickerMini {
     pub symbol: String,
     pub open_price: Decimal,
     pub high_price: Decimal,
@@ -86,4 +88,32 @@ pub struct TickerTradingDayMini {
 pub struct TickerPrice {
     pub symbol: String,
     pub price: Decimal,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TickerBook {
+    pub symbol: String,
+    pub bid_price: Decimal,
+    pub bid_qty: Decimal,
+    pub ask_price: Decimal,
+    pub ask_qty: Decimal,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WindowSize {
+    Minutes(u64),
+    Hours(u64),
+    Days(u64),
+}
+
+impl Display for WindowSize {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Minutes(m) => write!(f, "{m}m"),
+            Self::Hours(h) => write!(f, "{h}h"),
+            Self::Days(d) => write!(f, "{d}d"),
+        }
+    }
 }

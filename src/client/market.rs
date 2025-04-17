@@ -3,8 +3,8 @@ use url::Url;
 
 use crate::errors::BinanceError;
 use crate::types::market::{
-    AveragePrice, CompressedTrade, Kline, KlineInterval, OrderBook, Ticker24, Ticker24Mini,
-    TickerTradingDay, TickerTradingDayMini, Trade,
+    AveragePrice, CompressedTrade, Kline, KlineInterval, OrderBook, Ticker, Ticker24, Ticker24Mini,
+    TickerBook, TickerMini, TickerPrice, Trade, WindowSize,
 };
 
 use super::get_base_url;
@@ -281,7 +281,7 @@ impl BinanceMarketClient {
     pub async fn get_ticker_trading_day(
         &self,
         symbols: &[&str],
-    ) -> Result<Vec<TickerTradingDay>, BinanceError> {
+    ) -> Result<Vec<Ticker>, BinanceError> {
         let url = self.base_url.join("ticker/tradingDay")?;
 
         let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
@@ -294,7 +294,7 @@ impl BinanceMarketClient {
             .send()
             .await?
             .error_for_status()?
-            .json::<Vec<TickerTradingDay>>()
+            .json::<Vec<Ticker>>()
             .await?;
 
         return Ok(resp);
@@ -303,7 +303,7 @@ impl BinanceMarketClient {
     pub async fn get_ticker_trading_day_mini(
         &self,
         symbols: &[&str],
-    ) -> Result<Vec<TickerTradingDayMini>, BinanceError> {
+    ) -> Result<Vec<TickerMini>, BinanceError> {
         let url = self.base_url.join("ticker/tradingDay")?;
 
         let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
@@ -316,7 +316,101 @@ impl BinanceMarketClient {
             .send()
             .await?
             .error_for_status()?
-            .json::<Vec<TickerTradingDayMini>>()
+            .json::<Vec<TickerMini>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_ticker_price(
+        &self,
+        symbols: &[&str],
+    ) -> Result<Vec<TickerPrice>, BinanceError> {
+        let url = self.base_url.join("ticker/price")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![("symbols", symbols_query)];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<TickerPrice>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_ticker_book(&self, symbols: &[&str]) -> Result<Vec<TickerBook>, BinanceError> {
+        let url = self.base_url.join("ticker/bookTicker")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![("symbols", symbols_query)];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<TickerBook>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_rolling_window_price_change(
+        &self,
+        symbols: &[&str],
+        window_size: WindowSize,
+    ) -> Result<Vec<Ticker>, BinanceError> {
+        let url = self.base_url.join("ticker")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![
+            ("symbols", symbols_query),
+            ("windowSize", window_size.to_string()),
+        ];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<Ticker>>()
+            .await?;
+
+        return Ok(resp);
+    }
+
+    pub async fn get_rolling_window_price_change_mini(
+        &self,
+        symbols: &[&str],
+        window_size: WindowSize,
+    ) -> Result<Vec<TickerMini>, BinanceError> {
+        let url = self.base_url.join("ticker")?;
+
+        let symbols_query = format!("[\"{}\"]", symbols.join("\",\""));
+        let query = vec![
+            ("symbols", symbols_query),
+            ("windowSize", window_size.to_string()),
+            ("type", "MINI".to_string()),
+        ];
+
+        let resp = self
+            .client
+            .get(url)
+            .query(&query)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Vec<TickerMini>>()
             .await?;
 
         return Ok(resp);
@@ -528,5 +622,72 @@ mod tests {
         let result = client.get_ticker_trading_day_mini(&["BTCUSDT"]).await;
         let ticker = result.unwrap();
         assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_ticker_price() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+
+        let result = client.get_ticker_price(&["BTCUSDT", "ETHUSDT"]).await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].price > Decimal::from_str_exact("0.0").unwrap());
+        assert!(ticker[1].price > Decimal::from_str_exact("0.0").unwrap());
+        assert_eq!(ticker.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_ticker_book() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+        let result = client.get_ticker_book(&["BTCUSDT", "ETHUSDT"]).await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].ask_price > Decimal::from_str_exact("0.0").unwrap());
+        assert!(ticker[1].ask_price > Decimal::from_str_exact("0.0").unwrap());
+        assert_eq!(ticker.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_rolling_window_price_change() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+        let result = client
+            .get_rolling_window_price_change(&["BTCUSDT", "ETHUSDT"], WindowSize::Days(1))
+            .await;
+        let ticker = result.unwrap();
+        assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
+        assert!(ticker[1].open_price > Decimal::from_str_exact("0.0").unwrap());
+        assert_eq!(ticker.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_rolling_window_price_change_mini() {
+        let client = BinanceMarketClient::new(
+            Client::new(),
+            "test key".to_string(),
+            "test secret".to_string(),
+            true,
+        );
+
+        let result = client
+            .get_rolling_window_price_change_mini(&["BTCUSDT", "ETHUSDT"], WindowSize::Days(1))
+            .await;
+
+        let ticker = result.unwrap();
+        assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
+        assert!(ticker[1].open_price > Decimal::from_str_exact("0.0").unwrap());
+        assert_eq!(ticker.len(), 2);
     }
 }
