@@ -13,6 +13,7 @@ pub struct BinanceClient {
 }
 
 impl BinanceClient {
+    #[must_use]
     pub fn new(api_key: String, secret: String, testnet: bool) -> Self {
         let client = Client::new();
         return Self {
@@ -41,7 +42,6 @@ impl BinanceClient {
 
 #[cfg(test)]
 mod tests {
-    use rust_decimal::Decimal;
 
     use super::*;
 
@@ -50,6 +50,6 @@ mod tests {
         let api_key = "test_api_key";
         let secret = "test_secret";
 
-        BinanceClient::new(api_key.to_string(), secret.to_string(), true);
+        let _ = BinanceClient::new(api_key.to_string(), secret.to_string(), true);
     }
 }

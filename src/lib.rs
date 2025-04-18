@@ -1,9 +1,6 @@
 mod client;
-mod errors;
+pub mod errors;
 mod request;
-mod types;
+pub mod types;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-}
+pub use client::BinanceClient;
