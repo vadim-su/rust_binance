@@ -16,4 +16,7 @@ pub enum BinanceError {
 
     #[error("API error: {0} - {1:?}")]
     Api(u16, Error),
+
+    #[error("Missing parameter: {0}")]
+    MissingParameter(String),
 }

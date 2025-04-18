@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+use std::time;
+
 use reqwest::{Client, Method};
-use tokio_tungstenite::tungstenite::http::method;
+use serde_json::Value;
 use url::Url;
 
 use crate::errors::BinanceError;
@@ -43,6 +46,58 @@ impl BinanceTreadClient {
         }
 
         let order: Order = response.json().await?;
+
+        Ok(order)
+    }
+
+    pub async fn get_order(
+        &self,
+        symbol: &str,
+        order_id: Option<u64>,
+        orig_client_order_id: Option<&str>,
+        recv_window: Option<u32>,
+    ) -> Result<Value, BinanceError> {
+        let url = self.base_url.join("order")?;
+        let method = Method::GET;
+        let timestamp = time::SystemTime::now()
+            .duration_since(time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string();
+
+        let mut params = HashMap::new();
+
+        params.insert("symbol", symbol.to_string());
+        params.insert("timestamp", timestamp);
+
+        if order_id.is_none() && orig_client_order_id.is_none() {
+            return Err(BinanceError::MissingParameter(
+                "Either orderId or origClientOrderId must be provided".to_string(),
+            ));
+        }
+
+        if let Some(order_id) = order_id {
+            params.insert("orderId", order_id.to_string());
+        }
+        if let Some(orig_client_order_id) = orig_client_order_id {
+            params.insert("origClientOrderId", orig_client_order_id.to_string());
+        }
+        if let Some(recv_window) = recv_window {
+            params.insert("recvWindow", recv_window.to_string());
+        }
+
+        let request = make_request(&self.client, method, &url, &params)?;
+        let signed_request = sign_request(request, &self.api_key, &self.secret).unwrap();
+
+        let response = self.client.execute(signed_request).await?;
+
+        if !response.status().is_success() {
+            let status_code: u16 = response.status().as_u16();
+            let error: Error = response.json().await?;
+            return Err(BinanceError::Api(status_code, error));
+        }
+
+        let order: Value = response.json().await?;
 
         Ok(order)
     }
