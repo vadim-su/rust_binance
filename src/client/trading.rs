@@ -12,14 +12,14 @@ use crate::types::trading::{Order, OrderCreationData};
 
 use super::get_base_url;
 
-pub struct BinanceTreadClient {
+pub struct BinanceTradingClient {
     client: Client,
     api_key: String,
     secret: String,
     base_url: Url,
 }
 
-impl BinanceTreadClient {
+impl BinanceTradingClient {
     pub fn new(client: Client, api_key: String, secret: String, testnet: bool) -> Self {
         return Self {
             client,
@@ -309,7 +309,7 @@ mod tests {
         let secret = "test_secret";
 
         let client =
-            BinanceTreadClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
+            BinanceTradingClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
         assert_eq!(client.api_key, api_key);
         assert_eq!(client.secret, secret);
         assert_eq!(
@@ -317,7 +317,7 @@ mod tests {
             "https://testnet.binance.vision/api/v3/"
         );
 
-        let client = BinanceTreadClient::new(
+        let client = BinanceTradingClient::new(
             Client::new(),
             api_key.to_string(),
             secret.to_string(),
@@ -352,7 +352,7 @@ mod tests {
         };
 
         let client =
-            BinanceTreadClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
+            BinanceTradingClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
         let result = client.create_order(order_data).await.unwrap();
         assert_eq!(result.symbol, "BTCUSDT");
         assert_eq!(result.price, Decimal::from_str_exact("80000").unwrap());
@@ -366,7 +366,8 @@ mod tests {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
-        let client = BinanceTreadClient::new(Client::new(), api_key.clone(), secret.clone(), true);
+        let client =
+            BinanceTradingClient::new(Client::new(), api_key.clone(), secret.clone(), true);
 
         client.get_open_orders(None, None).await.unwrap();
     }
@@ -376,7 +377,8 @@ mod tests {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
-        let client = BinanceTreadClient::new(Client::new(), api_key.clone(), secret.clone(), true);
+        let client =
+            BinanceTradingClient::new(Client::new(), api_key.clone(), secret.clone(), true);
 
         client
             .get_orders("BTCUSDT", None, None, None, None, None)
@@ -389,7 +391,7 @@ mod tests {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
-        let client = BinanceTreadClient::new(Client::new(), api_key, secret, true);
+        let client = BinanceTradingClient::new(Client::new(), api_key, secret, true);
 
         let order_data = OrderCreationData::Limit {
             common: CommonOrderCreateData {
@@ -446,7 +448,7 @@ mod tests {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
-        let client = BinanceTreadClient::new(Client::new(), api_key, secret, true);
+        let client = BinanceTradingClient::new(Client::new(), api_key, secret, true);
 
         let order_data = OrderCreationData::Limit {
             common: CommonOrderCreateData {

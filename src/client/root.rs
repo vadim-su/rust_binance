@@ -1,10 +1,15 @@
 use reqwest::Client;
 
-use super::{general::BinanceGeneralClient, market::BinanceMarketClient};
+use super::{
+    account::BinanceAccountClient, general::BinanceGeneralClient, market::BinanceMarketClient,
+    trading::BinanceTradingClient,
+};
 
 pub struct BinanceClient {
     pub general: BinanceGeneralClient,
     pub market: BinanceMarketClient,
+    pub treading: BinanceTradingClient,
+    pub account: BinanceAccountClient,
 }
 
 impl BinanceClient {
@@ -23,6 +28,13 @@ impl BinanceClient {
                 secret.clone(),
                 testnet,
             ),
+            treading: BinanceTradingClient::new(
+                client.clone(),
+                api_key.clone(),
+                secret.clone(),
+                testnet,
+            ),
+            account: BinanceAccountClient::new(client, api_key, secret, testnet),
         };
     }
 }

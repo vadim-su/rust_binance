@@ -2,7 +2,7 @@ mod account;
 mod general;
 mod market;
 mod root;
-mod treading;
+mod trading;
 
 use url::Url;
 
