@@ -16,8 +16,6 @@ pub fn make_request<T: Serialize>(
     let query = serde_qs::to_string(data).unwrap();
     url.set_query(Some(&query));
 
-    println!("Request URL: {url}");
-
     let request = client.request(method, url).build()?;
     return Ok(request);
 }
