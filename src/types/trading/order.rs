@@ -178,10 +178,10 @@ pub enum OrderStatus {
 #[allow(clippy::struct_field_names)]
 pub struct Order {
     pub symbol: String,
-    pub order_id: i64,
+    pub order_id: u64,
     pub order_list_id: i64,
     pub client_order_id: String,
-    pub transact_time: i64,
+    pub transact_time: Option<i64>,
     pub price: Decimal,
     pub orig_qty: Decimal,
     pub executed_qty: Decimal,
@@ -192,6 +192,6 @@ pub struct Order {
     #[serde(rename = "type")]
     pub type_: String,
     pub side: OrderSide,
-    pub working_time: i64,
+    pub working_time: Option<i64>,
     pub self_trade_prevention_mode: SelfTradePreventionMode,
 }
