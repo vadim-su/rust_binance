@@ -23,12 +23,7 @@ impl BinanceClient {
                 secret.clone(),
                 testnet,
             ),
-            market: BinanceMarketClient::new(
-                client.clone(),
-                api_key.clone(),
-                secret.clone(),
-                testnet,
-            ),
+            market: BinanceMarketClient::new(client.clone(), testnet),
             treading: BinanceTradingClient::new(
                 client.clone(),
                 api_key.clone(),

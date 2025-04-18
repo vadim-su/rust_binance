@@ -11,17 +11,13 @@ use super::get_base_url;
 
 pub struct BinanceMarketClient {
     client: Client,
-    api_key: String,
-    secret: String,
     base_url: Url,
 }
 
 impl BinanceMarketClient {
-    pub fn new(client: Client, api_key: String, secret: String, testnet: bool) -> Self {
+    pub fn new(client: Client, testnet: bool) -> Self {
         return Self {
             client,
-            api_key,
-            secret,
             base_url: get_base_url(testnet),
         };
     }
@@ -428,34 +424,19 @@ mod tests {
         let api_key = "test_api_key";
         let secret = "test_secret";
 
-        let client =
-            BinanceMarketClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
-        assert_eq!(client.api_key, api_key);
-        assert_eq!(client.secret, secret);
+        let client = BinanceMarketClient::new(Client::new(), true);
         assert_eq!(
             client.base_url.as_str(),
             "https://testnet.binance.vision/api/v3/"
         );
 
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            api_key.to_string(),
-            secret.to_string(),
-            false,
-        );
-        assert_eq!(client.api_key, api_key);
-        assert_eq!(client.secret, secret);
+        let client = BinanceMarketClient::new(Client::new(), false);
         assert_eq!(client.base_url.as_str(), "https://api.binance.com/api/v3/");
     }
 
     #[tokio::test]
     async fn test_get_depth() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_depth("BTCUSDT", Some(5)).await;
         let depth = result.unwrap();
         assert!(!depth.bids.is_empty());
@@ -469,12 +450,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_recent_trades() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_recent_trades("BTCUSDT", Some(5)).await;
         let trades = result.unwrap();
         assert!(!trades.is_empty());
@@ -483,12 +459,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_historical_trades() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_historical_trades("BTCUSDT", Some(5), None).await;
         let trades = result.unwrap();
         assert!(!trades.is_empty());
@@ -497,12 +468,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_historical_trades_with_from_id() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client
             .get_historical_trades("BTCUSDT", Some(5), Some(1))
             .await;
@@ -513,12 +479,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_compressed_trades() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client
             .get_compressed_trades("BTCUSDT", Some(5), None, None, None)
             .await;
@@ -529,12 +490,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_klines() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client
             .get_klines("BTCUSDT", KlineInterval::OneDay, Some(5), None, None, None)
             .await;
@@ -545,12 +501,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ui_klines() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client
             .get_ui_klines("BTCUSDT", KlineInterval::OneDay, Some(5), None, None, None)
             .await;
@@ -561,12 +512,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_average_price() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_average_price("BTCUSDT").await;
         let average_price = result.unwrap();
         assert!(average_price.price > Decimal::from_str_exact("0.0").unwrap());
@@ -574,12 +520,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ticker_24hr() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_ticker_24hr(&["BTCUSDT"]).await;
         let ticker = result.unwrap();
         assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
@@ -587,12 +528,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ticker_24hr_mini() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_ticker_24hr_mini(&["BTCUSDT"]).await;
         let ticker = result.unwrap();
         assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
@@ -600,12 +536,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ticker_trading_day() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_ticker_trading_day(&["BTCUSDT"]).await;
         let ticker = result.unwrap();
         assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
@@ -613,12 +544,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ticker_trading_day_mini() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_ticker_trading_day_mini(&["BTCUSDT"]).await;
         let ticker = result.unwrap();
         assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
@@ -626,12 +552,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ticker_price() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
 
         let result = client.get_ticker_price(&["BTCUSDT", "ETHUSDT"]).await;
         let ticker = result.unwrap();
@@ -642,12 +563,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_ticker_book() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client.get_ticker_book(&["BTCUSDT", "ETHUSDT"]).await;
         let ticker = result.unwrap();
         assert!(ticker[0].ask_price > Decimal::from_str_exact("0.0").unwrap());
@@ -657,12 +573,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_rolling_window_price_change() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
         let result = client
             .get_rolling_window_price_change(&["BTCUSDT", "ETHUSDT"], WindowSize::Days(1))
             .await;
@@ -674,12 +585,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_rolling_window_price_change_mini() {
-        let client = BinanceMarketClient::new(
-            Client::new(),
-            "test key".to_string(),
-            "test secret".to_string(),
-            true,
-        );
+        let client = BinanceMarketClient::new(Client::new(), true);
 
         let result = client
             .get_rolling_window_price_change_mini(&["BTCUSDT", "ETHUSDT"], WindowSize::Days(1))
