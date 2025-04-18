@@ -1,3 +1,5 @@
+use crate::types::general::Error;
+
 #[derive(Debug, thiserror::Error)]
 pub enum BinanceError {
     #[error("URL construction error: {0}")]
@@ -12,6 +14,6 @@ pub enum BinanceError {
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
 
-    #[error("API error: {0}")]
-    Api(String),
+    #[error("API error: {0} - {1:?}")]
+    Api(u16, Error),
 }

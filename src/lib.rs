@@ -1,6 +1,6 @@
-mod auth;
 mod client;
 mod errors;
+mod request;
 mod types;
 
 #[cfg(test)]

@@ -123,6 +123,7 @@ mod tests {
             true,
         );
         let result = client.get_exchange_info(&["BTCUSDT", "ETHUSDT"]).await;
+        println!("{:?}", result);
         assert!(!result.unwrap().symbols.is_empty());
     }
 }
