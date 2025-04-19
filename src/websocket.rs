@@ -99,7 +99,5 @@ mod tests {
             assert!(event.price > Decimal::ZERO);
             assert!(event.quantity > Decimal::ZERO);
         }
-        // If the receiver has been dropped, we can stop processing messages
-        drop(rx);
     }
 }
