@@ -1,5 +1,7 @@
 use reqwest::Client;
 
+use crate::websocket::BinanceWebSocket;
+
 use super::{
     account::BinanceAccountClient, general::BinanceGeneralClient, market::BinanceMarketClient,
     trading::BinanceTradingClient,
@@ -10,6 +12,7 @@ pub struct BinanceClient {
     pub market: BinanceMarketClient,
     pub treading: BinanceTradingClient,
     pub account: BinanceAccountClient,
+    pub websocket: BinanceWebSocket,
 }
 
 impl BinanceClient {
@@ -17,12 +20,7 @@ impl BinanceClient {
     pub fn new(api_key: String, secret: String, testnet: bool) -> Self {
         let client = Client::new();
         return Self {
-            general: BinanceGeneralClient::new(
-                client.clone(),
-                api_key.clone(),
-                secret.clone(),
-                testnet,
-            ),
+            general: BinanceGeneralClient::new(client.clone(), testnet),
             market: BinanceMarketClient::new(client.clone(), testnet),
             treading: BinanceTradingClient::new(
                 client.clone(),
@@ -31,6 +29,7 @@ impl BinanceClient {
                 testnet,
             ),
             account: BinanceAccountClient::new(client, api_key, secret, testnet),
+            websocket: BinanceWebSocket::new(testnet),
         };
     }
 }

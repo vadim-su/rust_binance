@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::time;
 
 use reqwest::{Client, Method};
-use serde_json::Value;
 use url::Url;
 
 use crate::errors::BinanceError;
@@ -293,7 +292,6 @@ impl BinanceTradingClient {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
     use std::{env, time};
 
     use rust_decimal::Decimal;
@@ -387,6 +385,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_order_pipeline() {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();

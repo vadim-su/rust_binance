@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+futures-util = "0.3.31"
 hex = "0.4.3"
 hmac = "0.12.1"
 log = "0.4.27"
@@ -16,7 +17,7 @@ serial_test = "3.2.0"
 sha2 = "0.10.8"
 thiserror = "2.0.12"
 tokio = { version = "1.44.2", features = ["full"] }
-tokio-tungstenite = "0.26.2"
+tokio-tungstenite = { version = "0.26.2", features = ["native-tls", "url"] }
 url = "2.5.4"
 
 

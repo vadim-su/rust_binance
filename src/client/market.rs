@@ -421,9 +421,6 @@ mod tests {
 
     #[test]
     fn test_new_client() {
-        let api_key = "test_api_key";
-        let secret = "test_secret";
-
         let client = BinanceMarketClient::new(Client::new(), true);
         assert_eq!(
             client.base_url.as_str(),
