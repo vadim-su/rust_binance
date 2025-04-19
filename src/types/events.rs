@@ -91,10 +91,10 @@ pub struct KlineData {
     pub interval: String,
 
     #[serde(rename = "f")]
-    pub first_trade_id: i32,
+    pub first_trade_id: i64,
 
     #[serde(rename = "L")]
-    pub last_trade_id: i32,
+    pub last_trade_id: i64,
 
     #[serde(rename = "o")]
     pub open_price: Decimal,
