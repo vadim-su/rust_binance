@@ -5,7 +5,7 @@ use crate::errors::BinanceError;
 use crate::types::general::{ExchangeInfo, Timestamp};
 
 use super::get_base_url;
-
+#[derive(Debug, Clone)]
 pub struct BinanceGeneralClient {
     client: Client,
     base_url: Url,

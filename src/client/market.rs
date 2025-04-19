@@ -9,6 +9,7 @@ use crate::types::market::{
 
 use super::get_base_url;
 
+#[derive(Debug, Clone)]
 pub struct BinanceMarketClient {
     client: Client,
     base_url: Url,

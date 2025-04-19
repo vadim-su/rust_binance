@@ -11,6 +11,7 @@ use crate::types::trading::{Order, OrderCreationData};
 
 use super::get_base_url;
 
+#[derive(Debug, Clone)]
 pub struct BinanceTradingClient {
     client: Client,
     api_key: String,

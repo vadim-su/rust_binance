@@ -11,6 +11,7 @@ use crate::types::general::Error;
 
 use super::get_base_url;
 
+#[derive(Debug, Clone)]
 pub struct BinanceAccountClient {
     client: Client,
     api_key: String,

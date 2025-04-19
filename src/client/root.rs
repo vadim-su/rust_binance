@@ -7,6 +7,7 @@ use super::{
     trading::BinanceTradingClient,
 };
 
+#[derive(Debug, Clone)]
 pub struct BinanceClient {
     pub general: BinanceGeneralClient,
     pub market: BinanceMarketClient,
