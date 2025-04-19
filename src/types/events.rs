@@ -2,7 +2,7 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct AggregateTradeEvent {
+pub struct AggTradeEvent {
     #[serde(rename = "e")]
     pub event_type: String,
 
