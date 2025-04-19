@@ -126,3 +126,105 @@ pub struct KlineData {
     #[serde(rename = "Q")]
     pub taker_buy_quote_volume: Decimal,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct MiniTickerEvent {
+    #[serde(rename = "e")]
+    pub event_type: String,
+
+    #[serde(rename = "E")]
+    pub event_time: u64,
+
+    #[serde(rename = "s")]
+    pub symbol: String,
+
+    #[serde(rename = "c")]
+    pub close_price: Decimal,
+
+    #[serde(rename = "o")]
+    pub open_price: Decimal,
+
+    #[serde(rename = "h")]
+    pub high_price: Decimal,
+
+    #[serde(rename = "l")]
+    pub low_price: Decimal,
+
+    #[serde(rename = "v")]
+    pub base_volume: Decimal,
+
+    #[serde(rename = "q")]
+    pub quote_volume: Decimal,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TickerEvent {
+    #[serde(rename = "e")]
+    pub event_type: String,
+
+    #[serde(rename = "E")]
+    pub event_time: u64,
+
+    #[serde(rename = "s")]
+    pub symbol: String,
+
+    #[serde(rename = "p")]
+    pub price_change: Decimal,
+
+    #[serde(rename = "P")]
+    pub price_change_percent: Decimal,
+
+    #[serde(rename = "w")]
+    pub weighted_avg_price: Decimal,
+
+    #[serde(rename = "x")]
+    pub first_trade_price: Decimal,
+
+    #[serde(rename = "c")]
+    pub last_price: Decimal,
+
+    #[serde(rename = "Q")]
+    pub last_quantity: Decimal,
+
+    #[serde(rename = "b")]
+    pub best_bid_price: Decimal,
+
+    #[serde(rename = "B")]
+    pub best_bid_quantity: Decimal,
+
+    #[serde(rename = "a")]
+    pub best_ask_price: Decimal,
+
+    #[serde(rename = "A")]
+    pub best_ask_quantity: Decimal,
+
+    #[serde(rename = "o")]
+    pub open_price: Decimal,
+
+    #[serde(rename = "h")]
+    pub high_price: Decimal,
+
+    #[serde(rename = "l")]
+    pub low_price: Decimal,
+
+    #[serde(rename = "v")]
+    pub base_volume: Decimal,
+
+    #[serde(rename = "q")]
+    pub quote_volume: Decimal,
+
+    #[serde(rename = "O")]
+    pub open_time: u64,
+
+    #[serde(rename = "C")]
+    pub close_time: u64,
+
+    #[serde(rename = "F")]
+    pub first_trade_id: u64,
+
+    #[serde(rename = "L")]
+    pub last_trade_id: u64,
+
+    #[serde(rename = "n")]
+    pub total_trades: u64,
+}
