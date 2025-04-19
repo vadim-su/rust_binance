@@ -30,30 +30,52 @@ impl BinanceWebSocket {
         let suffix = format!("{}@trade", symbol.to_lowercase());
         let ws_url = self.base_url.join(&suffix)?;
 
-        let (mut ws_stream, _) = connect_async(ws_url).await?;
+        loop {
+            let (mut ws_stream, _) = match connect_async(&ws_url).await {
+                Ok(stream) => stream,
+                Err(e) => {
+                    log::error!("WebSocket connection failed: {e}");
+                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                    continue;
+                }
+            };
 
-        while let Some(message) = ws_stream.next().await {
-            let message = message?;
-
-            match message {
-                Message::Text(text) => {
-                    let event: TradeEvent = serde_json::from_str(&text)?;
-                    if let Err(_) = tx.send(event).await {
-                        // If the receiver has been dropped, we can stop processing messages
+            while let Some(message) = ws_stream.next().await {
+                match message {
+                    Ok(Message::Text(text)) => {
+                        let event: TradeEvent = match serde_json::from_str(&text) {
+                            Ok(event) => event,
+                            Err(e) => {
+                                log::error!("Failed to parse trade event: {e}");
+                                continue;
+                            }
+                        };
+                        if tx.send(event).await.is_err() {
+                            log::info!("Receiver dropped. Stopping processing.");
+                            return Ok(());
+                        }
+                    }
+                    Ok(Message::Ping(ping)) => {
+                        if ws_stream.send(Message::Pong(ping)).await.is_err() {
+                            log::error!("Failed to send pong response");
+                            break;
+                        }
+                    }
+                    Ok(Message::Close(_)) => {
+                        log::info!("WebSocket connection closed by server");
+                        break;
+                    }
+                    Ok(_) => {}
+                    Err(e) => {
+                        log::error!("WebSocket message error: {e}");
                         break;
                     }
                 }
-                Message::Ping(ping) => {
-                    ws_stream.send(Message::Pong(ping)).await?;
-                }
-                Message::Close(_) => {
-                    break;
-                }
-                _ => {}
             }
-        }
 
-        Ok(())
+            log::info!("Reconnecting in 5 seconds...");
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        }
     }
 }
 

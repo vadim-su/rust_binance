@@ -13,7 +13,7 @@ pub struct AggregateTradeEvent {
     pub symbol: String,
 
     #[serde(rename = "a")]
-    pub aggregate_trade_id: i32,
+    pub aggregate_trade_id: u64,
 
     #[serde(rename = "p")]
     pub price: Decimal,
@@ -22,13 +22,13 @@ pub struct AggregateTradeEvent {
     pub quantity: Decimal,
 
     #[serde(rename = "f")]
-    pub first_trade_id: i32,
+    pub first_trade_id: u64,
 
     #[serde(rename = "l")]
-    pub last_trade_id: i32,
+    pub last_trade_id: u64,
 
     #[serde(rename = "T")]
-    pub trade_time: i64,
+    pub trade_time: u64,
 
     #[serde(rename = "m")]
     pub is_buyer_market_maker: bool,
@@ -40,13 +40,13 @@ pub struct TradeEvent {
     pub event_type: String,
 
     #[serde(rename = "E")]
-    pub event_time: i64,
+    pub event_time: u64,
 
     #[serde(rename = "s")]
     pub symbol: String,
 
     #[serde(rename = "t")]
-    pub trade_id: i32,
+    pub trade_id: u64,
 
     #[serde(rename = "p")]
     pub price: Decimal,
@@ -67,7 +67,7 @@ pub struct KlineEvent {
     pub event_type: String,
 
     #[serde(rename = "E")]
-    pub event_time: i64,
+    pub event_time: u64,
 
     #[serde(rename = "s")]
     pub symbol: String,

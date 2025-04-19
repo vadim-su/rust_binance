@@ -109,7 +109,6 @@ mod tests {
             BinanceAccountClient::new(Client::new(), api_key.clone(), secret.clone(), true);
 
         let account = client.get_account(Some(true), None).await.unwrap();
-        println!("{account:#?}");
         assert!(!account.balances.is_empty());
     }
 }
