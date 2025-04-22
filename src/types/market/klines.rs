@@ -4,7 +4,7 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde_json::Value;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Kline {
     pub open_time: u64,
     pub open_price: Decimal,
@@ -90,7 +90,7 @@ impl<'de> Deserialize<'de> for Kline {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub enum KlineInterval {
     OneSecond,
     OneMinute,
