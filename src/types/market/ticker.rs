@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use chrono::serde::ts_milliseconds;
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
@@ -22,8 +24,10 @@ pub struct Ticker24 {
     pub low_price: Decimal,
     pub volume: Decimal,
     pub quote_volume: Decimal,
-    pub open_time: u64,
-    pub close_time: u64,
+    #[serde(with = "ts_milliseconds")]
+    pub open_time: DateTime<Utc>,
+    #[serde(with = "ts_milliseconds")]
+    pub close_time: DateTime<Utc>,
     pub first_id: u64,
     pub last_id: u64,
     pub count: u64,
@@ -39,8 +43,10 @@ pub struct Ticker24Mini {
     pub last_price: Decimal,
     pub volume: Decimal,
     pub quote_volume: Decimal,
-    pub open_time: u64,
-    pub close_time: u64,
+    #[serde(with = "ts_milliseconds")]
+    pub open_time: DateTime<Utc>,
+    #[serde(with = "ts_milliseconds")]
+    pub close_time: DateTime<Utc>,
     pub first_id: u64,
     pub last_id: u64,
     pub count: u64,
@@ -59,8 +65,10 @@ pub struct Ticker {
     pub last_price: Decimal,
     pub volume: Decimal,
     pub quote_volume: Decimal,
-    pub open_time: u64,
-    pub close_time: u64,
+    #[serde(with = "ts_milliseconds")]
+    pub open_time: DateTime<Utc>,
+    #[serde(with = "ts_milliseconds")]
+    pub close_time: DateTime<Utc>,
     pub first_id: u64,
     pub last_id: u64,
     pub count: u64,
@@ -76,8 +84,10 @@ pub struct TickerMini {
     pub last_price: Decimal,
     pub volume: Decimal,
     pub quote_volume: Decimal,
-    pub open_time: u64,
-    pub close_time: u64,
+    #[serde(with = "ts_milliseconds")]
+    pub open_time: DateTime<Utc>,
+    #[serde(with = "ts_milliseconds")]
+    pub close_time: DateTime<Utc>,
     pub first_id: u64,
     pub last_id: u64,
     pub count: u64,

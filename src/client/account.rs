@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::time;
 
 use reqwest::{Client, Method};
 use url::Url;
@@ -36,11 +35,7 @@ impl BinanceAccountClient {
     ) -> Result<Account, BinanceError> {
         let url = self.base_url.join("account")?;
         let method = Method::GET;
-        let timestamp = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string();
+        let timestamp = chrono::Utc::now().timestamp_millis().to_string();
 
         let mut params = HashMap::new();
         params.insert("timestamp", timestamp);

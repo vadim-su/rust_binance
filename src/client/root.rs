@@ -27,6 +27,7 @@ impl BinanceClient {
                 client.clone(),
                 api_key.clone(),
                 secret.clone(),
+                None,
                 testnet,
             ),
             account: BinanceAccountClient::new(client, api_key, secret, testnet),

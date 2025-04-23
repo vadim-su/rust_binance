@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::time;
 
+use chrono::{DateTime, Utc};
 use reqwest::{Client, Method};
 use url::Url;
 
@@ -17,15 +17,23 @@ pub struct BinanceTradingClient {
     api_key: String,
     secret: String,
     base_url: Url,
+    recv_window: Option<u32>,
 }
 
 impl BinanceTradingClient {
-    pub fn new(client: Client, api_key: String, secret: String, testnet: bool) -> Self {
+    pub fn new(
+        client: Client,
+        api_key: String,
+        secret: String,
+        recv_window: Option<u32>,
+        testnet: bool,
+    ) -> Self {
         return Self {
             client,
             api_key,
             secret,
             base_url: get_base_url(testnet),
+            recv_window,
         };
     }
 
@@ -59,11 +67,7 @@ impl BinanceTradingClient {
     ) -> Result<Order, BinanceError> {
         let url = self.base_url.join("order")?;
         let method = Method::GET;
-        let timestamp = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string();
+        let timestamp = chrono::Utc::now().timestamp_millis().to_string();
 
         let mut params = HashMap::new();
 
@@ -109,11 +113,7 @@ impl BinanceTradingClient {
     ) -> Result<Vec<Order>, BinanceError> {
         let url = self.base_url.join("openOrders")?;
         let method = Method::GET;
-        let timestamp = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string();
+        let timestamp = chrono::Utc::now().timestamp_millis().to_string();
 
         let mut params = HashMap::new();
         params.insert("timestamp", timestamp);
@@ -145,18 +145,13 @@ impl BinanceTradingClient {
         &self,
         symbol: &str,
         order_id: Option<u64>,
-        start_time: Option<u64>,
-        end_time: Option<u64>,
+        start_time: Option<DateTime<Utc>>,
+        end_time: Option<DateTime<Utc>>,
         limit: Option<u32>,
-        recv_window: Option<u32>,
     ) -> Result<Vec<Order>, BinanceError> {
         let url = self.base_url.join("allOrders")?;
         let method = Method::GET;
-        let timestamp = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string();
+        let timestamp = chrono::Utc::now().timestamp_millis().to_string();
 
         let mut params = HashMap::new();
         params.insert("symbol", symbol.to_string());
@@ -166,15 +161,15 @@ impl BinanceTradingClient {
             params.insert("orderId", order_id.to_string());
         }
         if let Some(start_time) = start_time {
-            params.insert("startTime", start_time.to_string());
+            params.insert("startTime", start_time.timestamp_millis().to_string());
         }
         if let Some(end_time) = end_time {
-            params.insert("endTime", end_time.to_string());
+            params.insert("endTime", end_time.timestamp_millis().to_string());
         }
         if let Some(limit) = limit {
             params.insert("limit", limit.to_string());
         }
-        if let Some(recv_window) = recv_window {
+        if let Some(recv_window) = self.recv_window {
             params.insert("recvWindow", recv_window.to_string());
         }
 
@@ -205,11 +200,7 @@ impl BinanceTradingClient {
     ) -> Result<Order, BinanceError> {
         let url = self.base_url.join("order")?;
         let method = Method::DELETE;
-        let timestamp = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string();
+        let timestamp = chrono::Utc::now().timestamp_millis().to_string();
 
         let mut params = HashMap::new();
         params.insert("symbol", symbol.to_string());
@@ -260,11 +251,7 @@ impl BinanceTradingClient {
     ) -> Result<Vec<Order>, BinanceError> {
         let url = self.base_url.join("openOrders")?;
         let method = Method::DELETE;
-        let timestamp = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .to_string();
+        let timestamp = chrono::Utc::now().timestamp_millis().to_string();
 
         let mut params = HashMap::new();
         params.insert("symbol", symbol.to_string());
@@ -293,7 +280,7 @@ impl BinanceTradingClient {
 
 #[cfg(test)]
 mod tests {
-    use std::{env, time};
+    use std::env;
 
     use rust_decimal::Decimal;
     use serial_test::serial;
@@ -307,8 +294,13 @@ mod tests {
         let api_key = "test_api_key";
         let secret = "test_secret";
 
-        let client =
-            BinanceTradingClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
+        let client = BinanceTradingClient::new(
+            Client::new(),
+            api_key.to_string(),
+            secret.to_string(),
+            None,
+            true,
+        );
         assert_eq!(client.api_key, api_key);
         assert_eq!(client.secret, secret);
         assert_eq!(
@@ -320,6 +312,7 @@ mod tests {
             Client::new(),
             api_key.to_string(),
             secret.to_string(),
+            None,
             false,
         );
         assert_eq!(client.api_key, api_key);
@@ -336,12 +329,7 @@ mod tests {
             common: CommonOrderCreateData {
                 symbol: "BTCUSDT".to_string(),
                 side: OrderSide::Buy,
-                timestamp: time::SystemTime::now()
-                    .duration_since(time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis()
-                    .try_into()
-                    .unwrap(),
+                timestamp: chrono::Utc::now().timestamp_millis().try_into().unwrap(),
                 ..Default::default()
             },
             time_in_force: TimeInForce::Fok,
@@ -350,8 +338,13 @@ mod tests {
             iceberg_qty: None,
         };
 
-        let client =
-            BinanceTradingClient::new(Client::new(), api_key.to_string(), secret.to_string(), true);
+        let client = BinanceTradingClient::new(
+            Client::new(),
+            api_key.to_string(),
+            secret.to_string(),
+            None,
+            true,
+        );
         let result = client.create_order(order_data).await.unwrap();
         assert_eq!(result.symbol, "BTCUSDT");
         assert_eq!(result.price, Decimal::from_str_exact("80000").unwrap());
@@ -366,7 +359,7 @@ mod tests {
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
         let client =
-            BinanceTradingClient::new(Client::new(), api_key.clone(), secret.clone(), true);
+            BinanceTradingClient::new(Client::new(), api_key.clone(), secret.clone(), None, true);
 
         client.get_open_orders(None, None).await.unwrap();
     }
@@ -377,10 +370,10 @@ mod tests {
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
         let client =
-            BinanceTradingClient::new(Client::new(), api_key.clone(), secret.clone(), true);
+            BinanceTradingClient::new(Client::new(), api_key.clone(), secret.clone(), None, true);
 
         client
-            .get_orders("BTCUSDT", None, None, None, None, None)
+            .get_orders("BTCUSDT", None, None, None, None)
             .await
             .unwrap();
     }
@@ -391,18 +384,13 @@ mod tests {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
-        let client = BinanceTradingClient::new(Client::new(), api_key, secret, true);
+        let client = BinanceTradingClient::new(Client::new(), api_key, secret, None, true);
 
         let order_data = OrderCreationData::Limit {
             common: CommonOrderCreateData {
                 symbol: "BTCUSDT".to_string(),
                 side: OrderSide::Buy,
-                timestamp: time::SystemTime::now()
-                    .duration_since(time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis()
-                    .try_into()
-                    .unwrap(),
+                timestamp: chrono::Utc::now().timestamp_millis().try_into().unwrap(),
                 ..Default::default()
             },
             time_in_force: TimeInForce::Gtc,
@@ -448,18 +436,13 @@ mod tests {
         let api_key = env::var("BINANCE_TEST_API_KEY").unwrap();
         let secret = env::var("BINANCE_TEST_SECRET").unwrap();
 
-        let client = BinanceTradingClient::new(Client::new(), api_key, secret, true);
+        let client = BinanceTradingClient::new(Client::new(), api_key, secret, None, true);
 
         let order_data = OrderCreationData::Limit {
             common: CommonOrderCreateData {
                 symbol: "BTCUSDT".to_string(),
                 side: OrderSide::Buy,
-                timestamp: time::SystemTime::now()
-                    .duration_since(time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis()
-                    .try_into()
-                    .unwrap(),
+                timestamp: chrono::Utc::now().timestamp_millis().try_into().unwrap(),
                 ..Default::default()
             },
             time_in_force: TimeInForce::Gtc,

@@ -1,3 +1,5 @@
+use chrono::serde::ts_milliseconds;
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
@@ -78,11 +80,11 @@ pub struct KlineEvent {
 
 #[derive(Debug, Deserialize)]
 pub struct KlineData {
-    #[serde(rename = "t")]
-    pub start_time: u64,
+    #[serde(rename = "t", with = "ts_milliseconds")]
+    pub start_time: DateTime<Utc>,
 
-    #[serde(rename = "T")]
-    pub close_time: u64,
+    #[serde(rename = "T", with = "ts_milliseconds")]
+    pub close_time: DateTime<Utc>,
 
     #[serde(rename = "s")]
     pub symbol: String,

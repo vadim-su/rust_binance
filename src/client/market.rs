@@ -1,3 +1,4 @@
+use chrono::{DateTime, Duration, Utc};
 use reqwest::Client;
 use url::Url;
 
@@ -104,8 +105,8 @@ impl BinanceMarketClient {
         symbol: &str,
         limit: Option<u32>,
         from_id: Option<u32>,
-        start_time: Option<u64>,
-        end_time: Option<u64>,
+        start_time: Option<DateTime<Utc>>,
+        end_time: Option<DateTime<Utc>>,
     ) -> Result<Vec<CompressedTrade>, BinanceError> {
         let url = self.base_url.join("aggTrades")?;
         let mut query = vec![("symbol", symbol.to_string())];
@@ -117,10 +118,10 @@ impl BinanceMarketClient {
             query.push(("fromId", id.to_string()));
         }
         if let Some(start) = start_time {
-            query.push(("startTime", start.to_string()));
+            query.push(("startTime", start.timestamp_millis().to_string()));
         }
         if let Some(end) = end_time {
-            query.push(("endTime", end.to_string()));
+            query.push(("endTime", end.timestamp_millis().to_string()));
         }
 
         let resp = self
@@ -140,8 +141,8 @@ impl BinanceMarketClient {
         symbol: &str,
         interval: KlineInterval,
         limit: Option<u32>,
-        start_time: Option<u64>,
-        end_time: Option<u64>,
+        start_time: Option<DateTime<Utc>>,
+        end_time: Option<DateTime<Utc>>,
         timezone: Option<String>,
     ) -> Result<Vec<Kline>, BinanceError> {
         let url = self.base_url.join("klines")?;
@@ -154,10 +155,10 @@ impl BinanceMarketClient {
             query.push(("limit", l.to_string()));
         }
         if let Some(start) = start_time {
-            query.push(("startTime", start.to_string()));
+            query.push(("startTime", start.timestamp_millis().to_string()));
         }
         if let Some(end) = end_time {
-            query.push(("endTime", end.to_string()));
+            query.push(("endTime", end.timestamp_millis().to_string()));
         }
         if let Some(tz) = timezone {
             query.push(("timezone", tz));
@@ -181,8 +182,8 @@ impl BinanceMarketClient {
         symbol: &str,
         interval: KlineInterval,
         limit: Option<u32>,
-        start_time: Option<u64>,
-        end_time: Option<u64>,
+        start_time: Option<DateTime<Utc>>,
+        end_time: Option<DateTime<Utc>>,
         timezone: Option<String>,
     ) -> Result<Vec<Kline>, BinanceError> {
         let url = self.base_url.join("uiKlines")?;
@@ -195,10 +196,10 @@ impl BinanceMarketClient {
             query.push(("limit", l.to_string()));
         }
         if let Some(start) = start_time {
-            query.push(("startTime", start.to_string()));
+            query.push(("startTime", start.timestamp_millis().to_string()));
         }
         if let Some(end) = end_time {
-            query.push(("endTime", end.to_string()));
+            query.push(("endTime", end.timestamp_millis().to_string()));
         }
         if let Some(tz) = timezone {
             query.push(("timezone", tz));
@@ -413,18 +414,16 @@ impl BinanceMarketClient {
         return Ok(resp);
     }
 
-    /// Получить исторические klines за указанный диапазон времени.
-    /// Если данных больше лимита (1000), делает несколько запросов.
     pub async fn get_historical_klines(
         &self,
         symbol: &str,
         interval: KlineInterval,
-        start_time: u64,
-        end_time: u64,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
         timezone: Option<String>,
     ) -> Result<Vec<Kline>, BinanceError> {
         let mut all_klines = Vec::new();
-        let mut current_start = start_time;
+        let mut current_start = start_time; // Convert DateTime<Utc> to u64
         let max_limit = 1000;
 
         loop {
@@ -462,7 +461,7 @@ impl BinanceMarketClient {
             }
 
             // Next start is the open time of the last kline + 1ms
-            current_start = last_open_time + 1;
+            current_start = last_open_time + Duration::milliseconds(1);
         }
 
         Ok(all_klines)
@@ -648,5 +647,27 @@ mod tests {
         assert!(ticker[0].open_price > Decimal::from_str_exact("0.0").unwrap());
         assert!(ticker[1].open_price > Decimal::from_str_exact("0.0").unwrap());
         assert_eq!(ticker.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_historical_klines() {
+        let client = BinanceMarketClient::new(Client::new(), true);
+        // Пример: получить 5 дневных свечей за последние 5 дней
+        let now = chrono::Utc::now();
+        let start_time = now - chrono::Duration::days(5);
+        let end_time = now;
+
+        let klines = client
+            .get_historical_klines("BTCUSDT", KlineInterval::OneDay, start_time, end_time, None)
+            .await
+            .unwrap();
+
+        assert!(!klines.is_empty());
+        assert!(klines.len() <= 5);
+        assert!(
+            klines
+                .iter()
+                .all(|kline| { kline.open_time >= start_time && kline.open_time <= end_time })
+        );
     }
 }

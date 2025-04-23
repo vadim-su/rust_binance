@@ -1,18 +1,19 @@
 use core::fmt;
 
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde_json::Value;
 
 #[derive(Debug, Clone)]
 pub struct Kline {
-    pub open_time: u64,
+    pub open_time: DateTime<Utc>,
     pub open_price: Decimal,
     pub high_price: Decimal,
     pub low_price: Decimal,
     pub close_price: Decimal,
     pub volume: Decimal,
-    pub close_time: u64,
+    pub close_time: DateTime<Utc>,
     pub quote_asset_volume: Decimal,
     pub number_of_trades: u64,
     pub taker_buy_base_asset_volume: Decimal,
@@ -27,9 +28,14 @@ impl<'de> Deserialize<'de> for Kline {
     {
         let vec: [Value; 12] = Deserialize::deserialize(deserializer)?;
         return Ok(Self {
-            open_time: vec[0]
-                .as_u64()
-                .ok_or_else(|| serde::de::Error::custom("Invalid open_time"))?,
+            open_time: chrono::DateTime::<Utc>::from_timestamp_millis({
+                let open_time_u64 = vec[0]
+                    .as_u64()
+                    .ok_or_else(|| serde::de::Error::custom("Invalid open_time"))?;
+                i64::try_from(open_time_u64)
+                    .map_err(|_| serde::de::Error::custom("open_time out of range for i64"))?
+            })
+            .ok_or_else(|| serde::de::Error::custom("Invalid open_time millis"))?,
 
             open_price: vec[1]
                 .as_str()
@@ -61,9 +67,14 @@ impl<'de> Deserialize<'de> for Kline {
                 .parse()
                 .map_err(serde::de::Error::custom)?,
 
-            close_time: vec[6]
-                .as_u64()
-                .ok_or_else(|| serde::de::Error::custom("Invalid close_time"))?,
+            close_time: chrono::DateTime::<Utc>::from_timestamp_millis({
+                let close_time_u64 = vec[6]
+                    .as_u64()
+                    .ok_or_else(|| serde::de::Error::custom("Invalid close_time"))?;
+                i64::try_from(close_time_u64)
+                    .map_err(|_| serde::de::Error::custom("close_time out of range for i64"))?
+            })
+            .ok_or_else(|| serde::de::Error::custom("Invalid open_time millis"))?,
 
             quote_asset_volume: vec[7]
                 .as_str()
@@ -113,23 +124,23 @@ pub enum KlineInterval {
 impl fmt::Display for KlineInterval {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            KlineInterval::OneSecond => "1s",
-            KlineInterval::OneMinute => "1m",
-            KlineInterval::ThreeMinutes => "3m",
-            KlineInterval::FiveMinutes => "5m",
-            KlineInterval::FifteenMinutes => "15m",
-            KlineInterval::ThirtyMinutes => "30m",
-            KlineInterval::OneHour => "1h",
-            KlineInterval::TwoHours => "2h",
-            KlineInterval::FourHours => "4h",
-            KlineInterval::SixHours => "6h",
-            KlineInterval::EightHours => "8h",
-            KlineInterval::TwelveHours => "12h",
-            KlineInterval::OneDay => "1d",
-            KlineInterval::ThreeDays => "3d",
-            KlineInterval::OneWeek => "1w",
-            KlineInterval::OneMonth => "1M",
+            Self::OneSecond => "1s",
+            Self::OneMinute => "1m",
+            Self::ThreeMinutes => "3m",
+            Self::FiveMinutes => "5m",
+            Self::FifteenMinutes => "15m",
+            Self::ThirtyMinutes => "30m",
+            Self::OneHour => "1h",
+            Self::TwoHours => "2h",
+            Self::FourHours => "4h",
+            Self::SixHours => "6h",
+            Self::EightHours => "8h",
+            Self::TwelveHours => "12h",
+            Self::OneDay => "1d",
+            Self::ThreeDays => "3d",
+            Self::OneWeek => "1w",
+            Self::OneMonth => "1M",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
