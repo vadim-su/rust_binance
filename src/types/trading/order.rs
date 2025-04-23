@@ -38,7 +38,7 @@ impl Default for CommonOrderCreateData {
         Self {
             symbol: String::new(),
             side: OrderSide::default(),
-            timestamp: 0,
+            timestamp: chrono::Utc::now().timestamp_millis() as u64,
             new_client_order_id: None,
             strategy_id: None,
             strategy_type: None,
