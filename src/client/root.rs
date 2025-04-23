@@ -11,7 +11,7 @@ use super::{
 pub struct BinanceClient {
     pub general: BinanceGeneralClient,
     pub market: BinanceMarketClient,
-    pub treading: BinanceTradingClient,
+    pub trading: BinanceTradingClient,
     pub account: BinanceAccountClient,
     pub websocket: BinanceWebSocket,
 }
@@ -23,7 +23,7 @@ impl BinanceClient {
         return Self {
             general: BinanceGeneralClient::new(client.clone(), testnet),
             market: BinanceMarketClient::new(client.clone(), testnet),
-            treading: BinanceTradingClient::new(
+            trading: BinanceTradingClient::new(
                 client.clone(),
                 api_key.clone(),
                 secret.clone(),
