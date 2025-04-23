@@ -21,7 +21,7 @@ impl BinanceWebSocket {
     pub fn new(testnet: bool) -> Self {
         Self {
             base_url: Url::parse(if testnet {
-                "wss://testnet.binance.vision/ws/"
+                "wss://stream.testnet.binance.vision/ws"
             } else {
                 "wss://stream.binance.com/ws/"
             })
