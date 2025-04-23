@@ -412,6 +412,61 @@ impl BinanceMarketClient {
 
         return Ok(resp);
     }
+
+    /// Получить исторические klines за указанный диапазон времени.
+    /// Если данных больше лимита (1000), делает несколько запросов.
+    pub async fn get_historical_klines(
+        &self,
+        symbol: &str,
+        interval: KlineInterval,
+        start_time: u64,
+        end_time: u64,
+        timezone: Option<String>,
+    ) -> Result<Vec<Kline>, BinanceError> {
+        let mut all_klines = Vec::new();
+        let mut current_start = start_time;
+        let max_limit = 1000;
+
+        loop {
+            let klines = self
+                .get_klines(
+                    symbol,
+                    interval.clone(),
+                    Some(max_limit),
+                    Some(current_start),
+                    Some(end_time),
+                    timezone.clone(),
+                )
+                .await?;
+
+            if klines.is_empty() {
+                break;
+            }
+
+            // The last kline
+            let last_kline = klines.last().unwrap();
+            let last_open_time = last_kline.open_time;
+
+            // Add only klines that do not exceed end_time
+            let mut filtered_klines = klines
+                .into_iter()
+                .take_while(|k| k.open_time < end_time)
+                .collect::<Vec<_>>();
+
+            let fetched = filtered_klines.len();
+            all_klines.append(&mut filtered_klines);
+
+            // If less than max_limit or reached the end of the range, exit
+            if fetched < max_limit as usize || last_open_time >= end_time {
+                break;
+            }
+
+            // Next start is the open time of the last kline + 1ms
+            current_start = last_open_time + 1;
+        }
+
+        Ok(all_klines)
+    }
 }
 
 #[cfg(test)]
