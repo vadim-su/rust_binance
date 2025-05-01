@@ -9,7 +9,8 @@ pub struct Trade {
     pub price: Decimal,
     pub qty: Decimal,
     pub quote_qty: Decimal,
-    pub time: u64,
+    #[serde(with = "ts_milliseconds")]
+    pub time: DateTime<Utc>,
     pub is_buyer_maker: bool,
     pub is_best_match: bool,
 }
