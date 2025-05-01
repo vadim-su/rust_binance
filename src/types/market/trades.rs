@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc, serde::ts_milliseconds};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
@@ -30,8 +31,8 @@ pub struct CompressedTrade {
     #[serde(rename = "l")]
     pub last_trade_id: u64,
 
-    #[serde(rename = "T")]
-    pub timestamp: u64,
+    #[serde(rename = "T", with = "ts_milliseconds")]
+    pub timestamp: DateTime<Utc>,
 
     #[serde(rename = "m")]
     pub is_buyer_maker: bool,
