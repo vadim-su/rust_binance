@@ -3,9 +3,9 @@ use std::fmt::Display;
 use chrono::serde::ts_milliseconds;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Ticker24 {
     pub symbol: String,
@@ -33,7 +33,7 @@ pub struct Ticker24 {
     pub count: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Ticker24Mini {
     pub symbol: String,
@@ -52,7 +52,7 @@ pub struct Ticker24Mini {
     pub count: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Ticker {
     pub symbol: String,
@@ -74,7 +74,7 @@ pub struct Ticker {
     pub count: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TickerMini {
     pub symbol: String,
@@ -93,14 +93,14 @@ pub struct TickerMini {
     pub count: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TickerPrice {
     pub symbol: String,
     pub price: Decimal,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TickerBook {
     pub symbol: String,
@@ -110,7 +110,7 @@ pub struct TickerBook {
     pub ask_qty: Decimal,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum WindowSize {
     Minutes(u64),

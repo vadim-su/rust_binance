@@ -2,10 +2,10 @@ use core::fmt;
 
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Kline {
     pub open_time: DateTime<Utc>,
     pub open_price: Decimal,
@@ -101,7 +101,7 @@ impl<'de> Deserialize<'de> for Kline {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum KlineInterval {
     OneSecond,
     OneMinute,

@@ -1,8 +1,8 @@
 use chrono::{DateTime, Utc, serde::ts_milliseconds};
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Trade {
     pub id: u64,
@@ -15,7 +15,7 @@ pub struct Trade {
     pub is_best_match: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CompressedTrade {
     #[serde(rename = "a")]
     pub id: u64,

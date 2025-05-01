@@ -1,7 +1,7 @@
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderBook {
     pub last_update_id: u64,
@@ -10,7 +10,7 @@ pub struct OrderBook {
 }
 
 // Define a single struct for both bids and asks
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Order {
     pub price: Decimal,
     pub quantity: Decimal,
